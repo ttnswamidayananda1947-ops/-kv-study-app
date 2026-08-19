@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>கல்வி வானம் - லாகின்</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f4f7f6; color: #333; overflow-x: hidden; }
+
+        /* ஸ்கிரீன் அனிமேஷன் */
+        .screen { width: 100%; min-height: 100vh; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 1. Loading Screen */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: 0.5s; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #eee; border-top: 5px solid #4a90e2; border-radius: 50%; margin: 0 auto 15px auto; animation: spin 1s linear infinite; }
+        .logo-text { font-size: 2.5rem; color: #4a90e2; font-weight: bold; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 2. Login Screen */
+        #login-section { background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); display: flex; align-items: center; justify-content: center; }
+        .login-box { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .toggle-container { display: flex; background: #f0f0f0; border-radius: 30px; margin: 20px 0; }
+        .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 30px; color: #777; font-weight: bold; }
+        .toggle-btn.active { background: #4a90e2; color: white; }
+        .input-group input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
+        .submit-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .submit-btn:hover { background: #357abd; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Loading Screen -->
+    <div id="loader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <h1 class="logo-text">கல்வி வானம்</h1>
+            <p>Study App</p>
+        </div>
+    </div>
+
+    <!-- 2. Login Section -->
+    <div id="login-section" class="screen" style="display: none;">
+        <div class="login-box">
+            <h2>வரவேற்கிறோம்! 👋</h2>
+            <p id="role-desc">மாணவர் கணக்கில் நுழையவும்</p>
+            <div class="toggle-container">
+                <button class="toggle-btn active" id="btn-student" onclick="setRole('student')">மாணவர்</button>
+                <button class="toggle-btn" id="btn-teacher" onclick="setRole('teacher')">ஆசிரியர்</button>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <input type="email" placeholder="மின்னஞ்சல் (Email)" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" placeholder="கடவுச்சொல் (Password)" required>
+                </div>
+                <button type="submit" class="submit-btn" id="submit-btn">உள்ளே நுழைய</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 1. Loading Screen மறைய வைப்பது
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('login-section').style.display = 'flex';
+            }, 2500); // 2.5 வினாடிகள் லோடிங்
+        });
+
+        // 2. மாணவர் / ஆசிரியர் பட்டன் மாற்றம்
+        function setRole(role) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(role === 'student' ? 'btn-student' : 'btn-teacher').classList.add('active');
+            document.getElementById('role-desc').innerText = role === 'student' ? "மாணவர் கணக்கில் நுழையவும்" : "ஆசிரியர் கணக்கில் நுழையவும்";
+        }
+
+        // 3. Login பட்டனை அழுத்தியதும் index.html-க்கு ரீடைரக்ட் ஆகுதல்
+        function handleLogin(event) {
+            event.preventDefault();
+            document.getElementById('submit-btn').innerText = "Loading...";
+            
+            setTimeout(() => {
+                // லாகின் வெற்றிபெற்றவுடன் index.html என்ற மெயின் பேஜிற்குச் செல்லும்
+                window.location.href = "index.html"; 
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
