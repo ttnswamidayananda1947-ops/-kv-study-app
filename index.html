@@ -3,203 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>கல்வி வானம் - Smart Study App</title>
+    <title>கல்வி வானம் - மாணவர் பக்கம்</title>
     
-    <!-- லாகின் செக் (Auth Check) - லாகின் செய்யாதவர்களை வெளியேற்ற -->
-    <script>
-        if (localStorage.getItem("isLoggedIn") !== "true") {
-            window.location.href = "login.html"; // லாகின் பேஜிற்குத் துரத்துதல்
-        }
-    </script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #f4f7f6; color: #333; overflow-x: hidden; }
+        body { background: #f0f4f8; color: #333; }
 
-        /* ஸ்கிரீன் அனிமேஷன் */
-        .screen { width: 100%; min-height: calc(100vh - 70px); animation: fadeIn 0.4s ease-in-out; }
+        /* Menu Bar / Navbar */
+        .navbar { background: linear-gradient(135deg, #4a90e2 0%, #007aff 100%); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .nav-links { list-style: none; display: flex; gap: 15px; }
+        .nav-links li a { color: white; text-decoration: none; font-weight: 500; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
+        .nav-links li a:hover { background: rgba(255,255,255,0.2); }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        /* Subject Tabs */
+        .subject-menu { display: flex; justify-content: center; gap: 15px; margin: 20px; flex-wrap: wrap; }
+        .subject-btn { background: white; border: 2px solid #4a90e2; color: #4a90e2; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
+        .subject-btn:hover, .subject-btn.active { background: #4a90e2; color: white; }
+
+        /* Content Area */
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px 40px 20px; }
+        .lesson-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 25px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- Navigation Menu Bar (புதியது) --- */
-        .navbar { background: #4a90e2; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .nav-brand { color: white; font-size: 1.5rem; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 8px; }
         
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: 0.3s; padding: 5px 10px; border-radius: 5px; }
-        .nav-links a:hover { background: rgba(255,255,255,0.2); }
-        .active-link { background: rgba(255,255,255,0.2); font-weight: bold; }
-
-        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(231,76,60,0.4); }
-        .logout-btn:hover { background: #c0392b; transform: scale(0.95); }
-
-        /* --- Home Screen (Cards) --- */
-        .welcome-banner { text-align: center; padding: 20px; margin-top: 10px; }
-        .welcome-banner h1 { color: #2c3e50; }
-        .welcome-banner p { color: #7f8c8d; margin-top: 5px; }
-
-        main { padding: 0 20px 20px 20px; max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 15px; }
-        .subject-card { background: white; padding: 30px 15px; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; border: 2px solid transparent; }
-        .subject-card:hover { border-color: #4a90e2; transform: translateY(-5px); }
-        .subject-card:active { transform: scale(0.95); }
-        .card-icon { font-size: 3.5rem; margin-bottom: 10px; }
-        .subject-card h3 { color: #2c3e50; }
-
-        /* --- Details Screen --- */
-        .details-header { display: flex; align-items: center; justify-content: space-between; text-align: left; background: white; color: #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: 20px; }
-        .back-btn { background: #f0f0f0; border: none; color: #333; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .back-btn:hover { background: #e0e0e0; }
-        .video-container, .qa-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; background: #000; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .lesson-title { color: #2c3e50; margin-bottom: 15px; font-size: 1.4rem; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
-        .qa-container h3 { color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .qa-item { border-bottom: 1px solid #eee; padding: 12px 0; }
-        .qa-question { font-weight: bold; color: #e67e22; cursor: pointer; display: flex; justify-content: space-between; }
-        .qa-answer { display: none; margin-top: 10px; color: #555; background: #fdfbf7; padding: 12px; border-left: 4px solid #e67e22; border-radius: 6px; line-height: 1.5; }
+        /* YouTube Video Container */
+        .video-container { position: relative; width: 100%; padding-bottom: 56.25%; /* 16:9 Aspect Ratio */ margin-bottom: 20px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; border: none; }
 
-        /* --- Floating Action Button (KV AI) --- */
-        .floating-ai-btn { position: fixed; bottom: 25px; right: 25px; background: linear-gradient(135deg, #2c3e50, #4ca1af); color: white; border: none; border-radius: 30px; padding: 12px 25px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; z-index: 100; transition: 0.3s; }
-        .floating-ai-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        .floating-ai-btn:active { transform: scale(0.95); }
+        /* Q&A Section */
+        .qa-section { background: #f9fbff; padding: 15px; border-radius: 10px; border-left: 4px solid #4a90e2; margin-top: 15px; }
+        .q-text { font-weight: bold; color: #d35400; margin-bottom: 5px; margin-top: 10px; }
+        .a-text { color: #34495e; margin-bottom: 10px; padding-left: 10px; }
+        
+        .empty-msg { text-align: center; color: #7f8c8d; font-size: 1.2rem; margin-top: 50px; }
+        .loading-msg { text-align: center; color: #4a90e2; font-size: 1.2rem; font-weight: bold; margin-top: 50px; }
 
-        /* மொபைல் டிசைனுக்காக (Responsive) */
+        /* Mobile Responsive */
         @media (max-width: 600px) {
-            .nav-links { display: none; } /* மொபைலில் மெனு லிங்க்களை மறைக்க (பிற்காலத்தில் Hamburger menu வைக்கலாம்) */
-            .logout-btn { display: block; }
+            .navbar { flex-direction: column; gap: 15px; text-align: center; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-    <!-- மெனு பார் (Navigation Bar) -->
+    <!-- Menu Bar -->
     <nav class="navbar">
-        <a href="index.html" class="nav-brand">📚 கல்வி வானம்</a>
-        
-        <div class="nav-links">
-            <a href="index.html" class="active-link">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="contact.html">Contact</a>
-            <a href="disclaimer.html">Disclaimer</a>
-        </div>
-
-        <!-- வெளியேறு (Logout) பட்டன் -->
-        <button class="logout-btn" onclick="handleLogout()">Sign out</button>
+        <div class="logo">☁️ கல்வி வானம்</div>
+        <ul class="nav-links">
+            <li><a href="index.html">முகப்பு (Home)</a></li>
+            <li><a href="about.html">எங்களை பற்றி (About)</a></li>
+            <li><a href="contact.html">தொடர்புக்கு (Contact)</a></li>
+            <li><a href="disclaimer.html">பொறுப்புத்துறப்பு (Disclaimer)</a></li>
+        </ul>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </nav>
-        
-    <!-- 1. Home Screen (Subject Cards) -->
-    <div id="home-section" class="screen">
-        <div class="welcome-banner">
-            <h1>எதைப் படிக்க விரும்புகிறீர்கள்?</h1>
-            <p>உங்களுக்குப் பிடித்த பாடத்தைத் தேர்ந்தெடுத்துப் படிக்கத் தொடங்குங்கள்</p>
-        </div>
-        <main>
-            <div class="cards-grid">
-                <div class="subject-card" onclick="openSubject('maths')">
-                    <div class="card-icon">📐</div>
-                    <h3>கணிதம்</h3>
-                </div>
-                <div class="subject-card" onclick="openSubject('electronics')">
-                    <div class="card-icon">⚡</div>
-                    <h3>எலக்ட்ரானிக்ஸ்</h3>
-                </div>
-                <div class="subject-card" onclick="openSubject('chemistry')">
-                    <div class="card-icon">🧪</div>
-                    <h3>வேதியியல்</h3>
-                </div>
-            </div>
-        </main>
+
+    <!-- Subject Selection Buttons -->
+    <div class="subject-menu">
+        <button class="subject-btn active" id="btn-Maths" onclick="loadLessons('Maths')">📐 கணிதம்</button>
+        <button class="subject-btn" id="btn-Electronics" onclick="loadLessons('Electronics')">🔌 மின்னணுவியல்</button>
+        <button class="subject-btn" id="btn-Chemistry" onclick="loadLessons('Chemistry')">🧪 வேதியியல்</button>
     </div>
 
-    <!-- 2. Subject Details Screen -->
-    <div id="subject-details-section" class="screen" style="display: none;">
-        <main style="padding-top: 0;">
-            <header class="details-header">
-                <button class="back-btn" onclick="goToHome()">🔙 முகப்புக்குத் திரும்பு</button>
-                <h2 id="subject-title">பாடம்</h2>
-            </header>
-            
-            <section class="video-container">
-                <div class="video-wrapper">
-                    <!-- யூடியூப் வீடியோ வரும் இடம் -->
-                    <iframe id="video-frame" src="" frameborder="0" allowfullscreen></iframe>
-                </div>
-            </section>
-            
-            <section class="qa-container">
-                <h3>📝 முக்கிய கேள்வி - பதில்கள்</h3>
-                <div id="qa-list"></div>
-            </section>
-        </main>
+    <!-- Data Display Container -->
+    <div class="container" id="lessons-container">
+        <p class="loading-msg">பாடங்கள் ஏற்றப்படுகின்றன... ⏳</p>
     </div>
 
-    <!-- Floating Action Button (KV AI) - Redirects to kvai.html -->
-    <button class="floating-ai-btn" id="fab-btn" onclick="window.location.href='kvai.html'">
-        <span class="fab-icon">🤖</span>
-        <span class="fab-text">KV AI</span>
-    </button>
-
-    <!-- JavaScript லாஜிக் -->
     <script>
-        // --- 1. Sign Out லாஜிக் ---
-        function handleLogout() {
-            // லாகின் தகவலை அழித்துவிட்டு login.html-க்கு அனுப்புதல்
-            localStorage.removeItem("isLoggedIn");
-            window.location.href = "login.html";
-        }
-
-        // --- 2. பாடங்கள் டேட்டா (Subject Data) ---
-        const contentData = {
-            maths: { 
-                title: "கணிதம்", 
-                video: "https://www.youtube.com/embed/t-C-Q4p0aKs", 
-                qa: [{ q: "இயற்கணிதம் என்றால் என்ன?", a: "எண்கள் மற்றும் எழுத்துக்களைப் பயன்படுத்தி கணிதச் சமன்பாடுகளைத் தீர்க்கும் முறையாகும்." }] 
-            },
-            electronics: { 
-                title: "எலக்ட்ரானிக்ஸ்", 
-                video: "https://www.youtube.com/embed/zqwNXY-YvO0", 
-                qa: [{ q: "மின்னழுத்தம் என்றால் என்ன?", a: "மின்னோட்டத்தை உந்தித்தள்ளும் விசையே மின்னழுத்தம் எனப்படும்." }] 
-            },
-            chemistry: { 
-                title: "வேதியியல்", 
-                video: "https://www.youtube.com/embed/Vi91qyjuknM", 
-                qa: [{ q: "தண்ணீரின் வேதியியல் வாய்ப்பாடு என்ன?", a: "H2O (இரண்டு ஹைட்ரஜன், ஒரு ஆக்ஸிஜன்)." }] 
-            }
+        // 1. Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
+            authDomain: "kv-study-app.firebaseapp.com",
+            projectId: "kv-study-app",
+            storageBucket: "kv-study-app.firebasestorage.app",
+            messagingSenderId: "865978831958",
+            appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7"
         };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // --- 3. நேவிகேஷன் லாஜிக் (Navigation Logic) ---
-        function openSubject(subjectKey) {
-            document.getElementById('home-section').style.display = 'none';
-            document.getElementById('subject-details-section').style.display = 'block';
-            document.getElementById('fab-btn').style.display = 'none'; // வீடியோ பார்க்கும்போது AI பட்டனை மறைக்க
+        // 2. செக்யூரிட்டி: லாகின் செய்துள்ளாரா என சோதித்தல்
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                // லாகின் ஆகியிருந்தால், முதல் பாடத்தை (Maths) லோட் செய்யவும்
+                loadLessons('Maths');
+            }
+        });
 
-            const data = contentData[subjectKey];
-            document.getElementById('subject-title').innerText = data.title;
-            document.getElementById('video-frame').src = data.video;
+        // 3. YouTube லிங்க்கை Embed லிங்க்காக மாற்றும் ஃபங்ஷன்
+        function getYouTubeEmbedUrl(url) {
+            let videoId = "";
+            if (url.includes("youtu.be/")) {
+                videoId = url.split("youtu.be/")[1].split("?")[0];
+            } else if (url.includes("watch?v=")) {
+                videoId = url.split("watch?v=")[1].split("&")[0];
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        }
 
-            const qaList = document.getElementById('qa-list');
-            qaList.innerHTML = ''; 
-            data.qa.forEach(item => {
-                qaList.innerHTML += `
-                <div class="qa-item">
-                    <div class="qa-question" onclick="toggleAnswer(this)">
-                        <span>❓ ${item.q}</span> <span>▼</span>
-                    </div>
-                    <div class="qa-answer">👉 ${item.a}</div>
-                </div>`;
+        // 4. டேட்டாபேஸிலிருந்து பாடங்களை எடுக்கும் ஃபங்ஷன்
+        async function loadLessons(subject) {
+            // பட்டன் நிறங்களை மாற்றுதல்
+            document.querySelectorAll('.subject-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${subject}`).classList.add('active');
+
+            const container = document.getElementById('lessons-container');
+            container.innerHTML = `<p class="loading-msg">தகவல்கள் ஏற்றப்படுகின்றன... ⏳</p>`;
+
+            try {
+                // Firebase Database-ல் இருந்து குறிப்பிட்ட பாடத்தை மட்டும் எடுத்தல்
+                const snapshot = await db.collection("lessons")
+                                         .where("subject", "==", subject)
+                                         .get();
+                
+                container.innerHTML = ""; // பழைய தகவல்களை அழித்தல்
+
+                if (snapshot.empty) {
+                    container.innerHTML = `<p class="empty-msg">இந்த பாடத்தில் இன்னும் வீடியோக்கள் பதிவேற்றப்படவில்லை. 📚</p>`;
+                    return;
+                }
+
+                // டேட்டாவை HTML ஆக மாற்றுதல்
+                snapshot.forEach(doc => {
+                    const lesson = doc.data();
+                    const embedUrl = getYouTubeEmbedUrl(lesson.videoUrl);
+                    
+                    let qaHTML = "";
+                    // கேள்விகள் இருந்தால் அதை HTML ஆக மாற்றுதல்
+                    if (lesson.qa && lesson.qa.length > 0) {
+                        lesson.qa.forEach((item, index) => {
+                            if (item.q.trim() !== "") { // கேள்வி காலியாக இல்லையென்றால் மட்டும்
+                                qaHTML += `
+                                    <div class="q-text">Q${index + 1}: ${item.q}</div>
+                                    <div class="a-text">A: ${item.a}</div>
+                                `;
+                            }
+                        });
+                    }
+
+                    // முழு கார்டு HTML
+                    const cardHTML = `
+                        <div class="lesson-card">
+                            <h2 class="lesson-title">${lesson.title}</h2>
+                            <div class="video-container">
+                                <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </div>
+                            ${qaHTML !== "" ? `<div class="qa-section"><h3>கேள்வி - பதில்கள்:</h3>${qaHTML}</div>` : ""}
+                        </div>
+                    `;
+                    container.innerHTML += cardHTML;
+                });
+
+            } catch (error) {
+                console.error("Error loading lessons:", error);
+                container.innerHTML = `<p class="empty-msg" style="color:red;">தகவல்களை எடுப்பதில் பிழை ஏற்பட்டது.</p>`;
+            }
+        }
+
+        // 5. Logout
+        function handleLogout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem("isLoggedIn");
+                window.location.href = "login.html";
             });
-        }
-
-        function goToHome() {
-            document.getElementById('subject-details-section').style.display = 'none';
-            document.getElementById('home-section').style.display = 'block';
-            document.getElementById('video-frame').src = ""; // வீடியோவை நிறுத்துதல்
-            document.getElementById('fab-btn').style.display = 'flex'; // முகப்பு வந்ததும் AI பட்டனை மீண்டும் காட்ட
-        }
-
-        function toggleAnswer(element) {
-            const answer = element.nextElementSibling;
-            answer.style.display = answer.style.display === "block" ? "none" : "block";
         }
     </script>
 </body>
