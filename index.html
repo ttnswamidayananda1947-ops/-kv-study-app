@@ -12,71 +12,94 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #f0f4f8; color: #333; }
+        body { background: #f4f7f6; color: #333; overflow-x: hidden; }
 
-        /* Menu Bar / Navbar */
-        .navbar { background: linear-gradient(135deg, #4a90e2 0%, #007aff 100%); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; }
-        .logo { font-size: 1.5rem; font-weight: bold; }
-        .nav-links { list-style: none; display: flex; gap: 15px; }
-        .nav-links li a { color: white; text-decoration: none; font-weight: 500; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
-        .nav-links li a:hover { background: rgba(255,255,255,0.2); }
+        /* Navbar & Menu Icon */
+        .navbar { background: #4a90e2; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .menu-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
         .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        /* Subject Tabs */
-        .subject-menu { display: flex; justify-content: center; gap: 15px; margin: 20px; flex-wrap: wrap; }
-        .subject-btn { background: white; border: 2px solid #4a90e2; color: #4a90e2; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
-        .subject-btn:hover, .subject-btn.active { background: #4a90e2; color: white; }
+        /* Sidebar (Off-screen Menu) */
+        .sidebar { position: fixed; top: 0; left: -50%; width: 50%; height: 100vh; background: #ffffff; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.2); transition: 0.4s ease; display: flex; flex-direction: column; padding-top: 20px; min-width: 250px; }
+        .sidebar.active { left: 0; }
+        .close-btn { align-self: flex-end; margin-right: 20px; margin-bottom: 20px; font-size: 24px; background: none; border: none; color: #333; cursor: pointer; font-weight: bold; }
+        .sidebar a { text-decoration: none; color: #333; padding: 15px 25px; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #eee; transition: 0.3s; }
+        .sidebar a:hover { background: #f0f8ff; color: #4a90e2; }
+        
+        /* Overlay (இருண்ட பின்னணி) */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+        .overlay.active { display: block; }
 
-        /* Content Area */
-        .container { max-width: 900px; margin: 0 auto; padding: 0 20px 40px 20px; }
-        .lesson-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 25px; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Main Container */
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+
+        /* Subject Grid */
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .subject-card { background: white; padding: 30px 20px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 1.2rem; color: #333; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; border-bottom: 4px solid #4a90e2; }
+        .subject-card:hover { transform: translateY(-5px); background: #e0f7fa; }
+
+        /* Lessons Section */
+        #lessons-section { display: none; }
+        .back-btn { background: #7f8c8d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+        .lesson-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .lesson-title { font-size: 1.3rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
-        .lesson-title { color: #2c3e50; margin-bottom: 15px; font-size: 1.4rem; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        
-        /* YouTube Video Container */
-        .video-container { position: relative; width: 100%; padding-bottom: 56.25%; /* 16:9 Aspect Ratio */ margin-bottom: 20px; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; border: none; }
+        /* Video Container */
+        .video-container { position: relative; width: 100%; padding-bottom: 56.25%; /* 16:9 Aspect Ratio */ margin-bottom: 20px; background: #000; border-radius: 8px; overflow: hidden; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
         /* Q&A Section */
-        .qa-section { background: #f9fbff; padding: 15px; border-radius: 10px; border-left: 4px solid #4a90e2; margin-top: 15px; }
-        .q-text { font-weight: bold; color: #d35400; margin-bottom: 5px; margin-top: 10px; }
-        .a-text { color: #34495e; margin-bottom: 10px; padding-left: 10px; }
-        
-        .empty-msg { text-align: center; color: #7f8c8d; font-size: 1.2rem; margin-top: 50px; }
-        .loading-msg { text-align: center; color: #4a90e2; font-size: 1.2rem; font-weight: bold; margin-top: 50px; }
-
-        /* Mobile Responsive */
-        @media (max-width: 600px) {
-            .navbar { flex-direction: column; gap: 15px; text-align: center; }
-            .nav-links { flex-wrap: wrap; justify-content: center; }
-        }
+        .qa-container { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #4a90e2; }
+        .question { font-weight: bold; color: #d35400; margin-bottom: 5px; }
+        .answer { color: #333; line-height: 1.5; }
+        .empty-msg { text-align: center; color: #7f8c8d; font-size: 1.1rem; margin-top: 30px; }
+        .loader { text-align: center; font-weight: bold; color: #4a90e2; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <!-- Menu Bar -->
+    <!-- Overlay Background -->
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleMenu()">✖</button>
+        <a href="index.html">🏠 முகப்பு (Home)</a>
+        <a href="about.html">ℹ️ எங்களைப் பற்றி</a>
+        <a href="contact.html">📞 தொடர்பு கொள்ள</a>
+        <a href="disclaimer.html">⚠️ மறுப்புறுதி</a>
+    </div>
+
+    <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">☁️ கல்வி வானம்</div>
-        <ul class="nav-links">
-            <li><a href="index.html">முகப்பு (Home)</a></li>
-            <li><a href="about.html">எங்களை பற்றி (About)</a></li>
-            <li><a href="contact.html">தொடர்புக்கு (Contact)</a></li>
-            <li><a href="disclaimer.html">பொறுப்புத்துறப்பு (Disclaimer)</a></li>
-        </ul>
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <h2>கல்வி வானம்</h2>
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </nav>
 
-    <!-- Subject Selection Buttons -->
-    <div class="subject-menu">
-        <button class="subject-btn active" id="btn-Maths" onclick="loadLessons('Maths')">📐 கணிதம்</button>
-        <button class="subject-btn" id="btn-Electronics" onclick="loadLessons('Electronics')">🔌 மின்னணுவியல்</button>
-        <button class="subject-btn" id="btn-Chemistry" onclick="loadLessons('Chemistry')">🧪 வேதியியல்</button>
-    </div>
+    <!-- Main Content -->
+    <div class="container">
+        
+        <!-- பாடங்கள் தேர்வு செய்யும் பகுதி -->
+        <div id="subject-selection">
+            <h3 style="text-align:center; color:#2c3e50; margin-top:10px;">படிக்க வேண்டிய பாடத்தைத் தேர்ந்தெடுக்கவும்</h3>
+            <div class="subject-grid">
+                <div class="subject-card" onclick="fetchLessons('Maths')">📐 கணிதம் (Maths)</div>
+                <div class="subject-card" onclick="fetchLessons('Electronics')">🔌 மின்னணுவியல் (Electronics)</div>
+                <div class="subject-card" onclick="fetchLessons('Chemistry')">🧪 வேதியியல் (Chemistry)</div>
+            </div>
+        </div>
 
-    <!-- Data Display Container -->
-    <div class="container" id="lessons-container">
-        <p class="loading-msg">பாடங்கள் ஏற்றப்படுகின்றன... ⏳</p>
+        <!-- வீடியோ மற்றும் கேள்வி பதில் காட்டும் பகுதி (Firebase லிருந்து வரும்) -->
+        <div id="lessons-section">
+            <button class="back-btn" onclick="goBack()">🔙 பாடங்களுக்குத் திரும்பு</button>
+            <h3 id="current-subject-title" style="color:#4a90e2; margin-bottom:20px;"></h3>
+            
+            <div id="lessons-list">
+                <!-- இங்கு டேட்டாபேஸில் உள்ள பாடங்கள் லோட் ஆகும் -->
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -93,90 +116,110 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // 2. செக்யூரிட்டி: லாகின் செய்துள்ளாரா என சோதித்தல்
+        // 2. Authentication Check (யாராவது நேரடியாக லிங்க் மூலம் வந்தால் தடுக்க)
         auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "login.html";
-            } else {
-                // லாகின் ஆகியிருந்தால், முதல் பாடத்தை (Maths) லோட் செய்யவும்
-                loadLessons('Maths');
             }
         });
 
-        // 3. YouTube லிங்க்கை Embed லிங்க்காக மாற்றும் ஃபங்ஷன்
-        function getYouTubeEmbedUrl(url) {
-            let videoId = "";
-            if (url.includes("youtu.be/")) {
-                videoId = url.split("youtu.be/")[1].split("?")[0];
-            } else if (url.includes("watch?v=")) {
-                videoId = url.split("watch?v=")[1].split("&")[0];
-            }
-            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        // 3. Hamburger Menu Toggle Function
+        function toggleMenu() {
+            const sidebar = document.getElementById("sidebar");
+            const overlay = document.getElementById("overlay");
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
         }
 
-        // 4. டேட்டாபேஸிலிருந்து பாடங்களை எடுக்கும் ஃபங்ஷன்
-        async function loadLessons(subject) {
-            // பட்டன் நிறங்களை மாற்றுதல்
-            document.querySelectorAll('.subject-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-${subject}`).classList.add('active');
+        // 4. Go Back to Subject List
+        function goBack() {
+            document.getElementById('lessons-section').style.display = 'none';
+            document.getElementById('subject-selection').style.display = 'block';
+        }
 
-            const container = document.getElementById('lessons-container');
-            container.innerHTML = `<p class="loading-msg">தகவல்கள் ஏற்றப்படுகின்றன... ⏳</p>`;
+        // 5. YouTube Link Parser (வீடியோவை வெப்சைட்டிற்குள் ஓட வைக்க)
+        function getYouTubeEmbedUrl(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            if (match && match[2].length === 11) {
+                return `https://www.youtube.com/embed/${match[2]}`;
+            }
+            return null; // லிங்க் தவறாக இருந்தால்
+        }
+
+        // 6. Fetching Lessons from Database (டைனமிக் டேட்டா)
+        async function fetchLessons(subject) {
+            // UI மாற்றங்கள்
+            document.getElementById('subject-selection').style.display = 'none';
+            document.getElementById('lessons-section').style.display = 'block';
+            document.getElementById('current-subject-title').innerText = subject + " பாடங்கள்";
+            
+            const listDiv = document.getElementById('lessons-list');
+            listDiv.innerHTML = '<p class="loader">தரவுகள் ஏற்றப்படுகின்றன... (Loading)</p>';
 
             try {
-                // Firebase Database-ல் இருந்து குறிப்பிட்ட பாடத்தை மட்டும் எடுத்தல்
+                // Firebase Database-ல் குறிப்பிட்ட பாடத்தைத் தேடுதல்
                 const snapshot = await db.collection("lessons")
                                          .where("subject", "==", subject)
+                                         .orderBy("createdAt", "desc") // புதிய பாடம் முதலில் வர
                                          .get();
-                
-                container.innerHTML = ""; // பழைய தகவல்களை அழித்தல்
 
                 if (snapshot.empty) {
-                    container.innerHTML = `<p class="empty-msg">இந்த பாடத்தில் இன்னும் வீடியோக்கள் பதிவேற்றப்படவில்லை. 📚</p>`;
+                    listDiv.innerHTML = '<p class="empty-msg">இந்த பாடத்தில் இன்னும் வீடியோக்கள் பதிவேற்றப்படவில்லை. பின்னர் முயற்சிக்கவும்!</p>';
                     return;
                 }
 
-                // டேட்டாவை HTML ஆக மாற்றுதல்
+                let html = "";
+                
+                // ஒவ்வொரு பாடமாக எடுத்து டிசைனில் பொருத்துதல்
                 snapshot.forEach(doc => {
-                    const lesson = doc.data();
-                    const embedUrl = getYouTubeEmbedUrl(lesson.videoUrl);
+                    const data = doc.data();
+                    const embedUrl = getYouTubeEmbedUrl(data.videoUrl);
+
+                    html += `<div class="lesson-card">
+                                <h4 class="lesson-title">${data.title}</h4>`;
                     
-                    let qaHTML = "";
-                    // கேள்விகள் இருந்தால் அதை HTML ஆக மாற்றுதல்
-                    if (lesson.qa && lesson.qa.length > 0) {
-                        lesson.qa.forEach((item, index) => {
-                            if (item.q.trim() !== "") { // கேள்வி காலியாக இல்லையென்றால் மட்டும்
-                                qaHTML += `
-                                    <div class="q-text">Q${index + 1}: ${item.q}</div>
-                                    <div class="a-text">A: ${item.a}</div>
-                                `;
+                    // வீடியோ இருந்தால்
+                    if(embedUrl) {
+                        html += `<div class="video-container">
+                                    <iframe src="${embedUrl}" allowfullscreen></iframe>
+                                 </div>`;
+                    } else {
+                        html += `<p style="color:red;">வீடியோ லிங்க் தவறாக உள்ளது.</p>`;
+                    }
+
+                    // கேள்வி-பதில்கள் இருந்தால் அதை லூப் மூலம் காட்டுதல்
+                    if (data.qa && data.qa.length > 0) {
+                        data.qa.forEach((item, index) => {
+                            if (item.q && item.a) { // கேள்வி பதில் காலியாக இல்லாமல் இருந்தால் மட்டும்
+                                html += `<div class="qa-container">
+                                            <p class="question">Q${index + 1}: ${item.q}</p>
+                                            <p class="answer"><strong>பதில்:</strong> ${item.a}</p>
+                                         </div>`;
                             }
                         });
                     }
 
-                    // முழு கார்டு HTML
-                    const cardHTML = `
-                        <div class="lesson-card">
-                            <h2 class="lesson-title">${lesson.title}</h2>
-                            <div class="video-container">
-                                <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            </div>
-                            ${qaHTML !== "" ? `<div class="qa-section"><h3>கேள்வி - பதில்கள்:</h3>${qaHTML}</div>` : ""}
-                        </div>
-                    `;
-                    container.innerHTML += cardHTML;
+                    html += `</div>`; // Close lesson-card
                 });
 
+                listDiv.innerHTML = html;
+
             } catch (error) {
-                console.error("Error loading lessons:", error);
-                container.innerHTML = `<p class="empty-msg" style="color:red;">தகவல்களை எடுப்பதில் பிழை ஏற்பட்டது.</p>`;
+                console.error("Error fetching lessons:", error);
+                
+                // Index warning error-ஐ சரிசெய்யும் தற்காலிக வழி
+                if (error.message.includes("indexes")) {
+                    listDiv.innerHTML = '<p class="empty-msg" style="color:red;">டேட்டாபேஸ் Index செட் செய்யப்படவில்லை. கன்சோலில் உள்ள லிங்க்கை கிளிக் செய்யவும்.</p>';
+                } else {
+                    listDiv.innerHTML = '<p class="empty-msg" style="color:red;">தரவுகளை எடுப்பதில் பிழை. உங்கள் இன்டர்நெட்டை சரிபார்க்கவும்.</p>';
+                }
             }
         }
 
-        // 5. Logout
+        // 7. Logout Function
         function handleLogout() {
             auth.signOut().then(() => {
-                localStorage.removeItem("isLoggedIn");
                 window.location.href = "login.html";
             });
         }
