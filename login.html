@@ -5,34 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>கல்வி வானம் - லாகின்</title>
     
+    <!-- Firebase SDKs (Compat version for simple HTML setup) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #f4f7f6; color: #333; overflow-x: hidden; }
 
-        /* ஸ்கிரீன் அனிமேஷன் */
         .screen { width: 100%; min-height: 100vh; animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 1. Loading Screen */
+        /* Loader */
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: 0.5s; }
         .spinner { width: 50px; height: 50px; border: 5px solid #eee; border-top: 5px solid #4a90e2; border-radius: 50%; margin: 0 auto 15px auto; animation: spin 1s linear infinite; }
         .logo-text { font-size: 2.5rem; color: #4a90e2; font-weight: bold; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 2. Login Screen */
+        /* Login Box */
         #login-section { background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); display: flex; align-items: center; justify-content: center; }
         .login-box { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        
         .toggle-container { display: flex; background: #f0f0f0; border-radius: 30px; margin: 20px 0; }
-        .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 30px; color: #777; font-weight: bold; }
+        .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 30px; color: #777; font-weight: bold; transition: 0.3s; }
         .toggle-btn.active { background: #4a90e2; color: white; }
+        
         .input-group input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
-        .submit-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .submit-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .submit-btn:hover { background: #357abd; }
+        .register-btn { flex: 1; padding: 12px; border: 1px solid #4a90e2; border-radius: 10px; background: white; color: #4a90e2; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .register-btn:hover { background: #f0f8ff; }
+
+        /* Google Button */
+        .google-btn { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: white; color: #333; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .google-btn:hover { background: #f9f9f9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .google-icon { width: 20px; height: 20px; }
+        
+        #error-message { color: #e74c3c; font-size: 0.85rem; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 1. Loading Screen -->
     <div id="loader">
         <div class="loader-content">
             <div class="spinner"></div>
@@ -41,53 +57,151 @@
         </div>
     </div>
 
-    <!-- 2. Login Section -->
     <div id="login-section" class="screen" style="display: none;">
         <div class="login-box">
             <h2>வரவேற்கிறோம்! 👋</h2>
             <p id="role-desc">மாணவர் கணக்கில் நுழையவும்</p>
+            
             <div class="toggle-container">
                 <button class="toggle-btn active" id="btn-student" onclick="setRole('student')">மாணவர்</button>
                 <button class="toggle-btn" id="btn-teacher" onclick="setRole('teacher')">ஆசிரியர்</button>
             </div>
-            <form id="login-form" onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <input type="email" placeholder="மின்னஞ்சல் (Email)" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" placeholder="கடவுச்சொல் (Password)" required>
-                </div>
-                <button type="submit" class="submit-btn" id="submit-btn">உள்ளே நுழைய</button>
-            </form>
+
+            <p id="error-message"></p>
+
+            <div class="input-group">
+                <input type="email" id="email" placeholder="மின்னஞ்சல் (Email)" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="கடவுச்சொல் (Password)" required>
+            </div>
+            
+            <div class="btn-group">
+                <button class="submit-btn" onclick="handleEmailLogin()">உள்நுழைய</button>
+                <button class="register-btn" onclick="handleEmailSignUp()">புதிய கணக்கு</button>
+            </div>
+
+            <div style="margin: 15px 0; color: #aaa; font-size: 0.9rem;">(அல்லது)</div>
+
+            <button class="google-btn" onclick="handleGoogleLogin()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="google-icon" alt="Google">
+                Google மூலம் தொடரவும்
+            </button>
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // 1. Loading Screen மறைய வைப்பது
+        // 1. Firebase Configuration (நீங்கள் கொடுத்தது)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
+            authDomain: "kv-study-app.firebaseapp.com",
+            projectId: "kv-study-app",
+            storageBucket: "kv-study-app.firebasestorage.app",
+            messagingSenderId: "865978831958",
+            appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7",
+            measurementId: "G-96ZQTNLN54"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        let currentRole = 'student'; // Default role
+
+        // Loader
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('login-section').style.display = 'flex';
-            }, 2500); // 2.5 வினாடிகள் லோடிங்
+            }, 1500);
         });
 
-        // 2. மாணவர் / ஆசிரியர் பட்டன் மாற்றம்
+        // Toggle Role
         function setRole(role) {
+            currentRole = role;
             document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(role === 'student' ? 'btn-student' : 'btn-teacher').classList.add('active');
             document.getElementById('role-desc').innerText = role === 'student' ? "மாணவர் கணக்கில் நுழையவும்" : "ஆசிரியர் கணக்கில் நுழையவும்";
         }
 
-        // 3. Login பட்டனை அழுத்தியதும் index.html-க்கு ரீடைரக்ட் ஆகுதல்
-        function handleLogin(event) {
-            event.preventDefault();
-            document.getElementById('submit-btn').innerText = "Loading...";
-            
-            setTimeout(() => {
-                // லாகின் வெற்றிபெற்றவுடன் index.html என்ற மெயின் பேஜிற்குச் செல்லும்
-                window.location.href = "index.html"; 
-            }, 1000);
+        function showError(msg) {
+            const errDiv = document.getElementById('error-message');
+            errDiv.innerText = msg;
+            errDiv.style.display = 'block';
+        }
+
+        // 2. யூசர் டேட்டாவை செக் செய்யும் மிக முக்கியமான ஃபங்ஷன் (Admin Approval Logic)
+        async function checkAndRouteUser(user) {
+            try {
+                const userDocRef = db.collection("users").doc(user.uid);
+                const doc = await userDocRef.get();
+
+                if (!doc.exists) {
+                    // புதிய கணக்கு என்றால் டேட்டாபேஸில் பதிவு செய்கிறோம்
+                    const isAdmin = (user.email === "ttnswamidayananda1947@gmail.com");
+                    const status = (currentRole === 'student' || isAdmin) ? "approved" : "pending";
+                    
+                    await userDocRef.set({
+                        email: user.email,
+                        role: isAdmin ? "admin" : currentRole,
+                        status: status,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    if (status === "pending") {
+                        auth.signOut();
+                        alert("உங்கள் கோரிக்கை பெறப்பட்டது! அட்மின் ஒப்புதலுக்காக 24 முதல் 48 மணி நேரம் காத்திருக்கவும்.");
+                        return;
+                    }
+                } else {
+                    // ஏற்கனவே உள்ள கணக்கு என்றால் Status செக் செய்கிறோம்
+                    const userData = doc.data();
+                    if (userData.role === 'teacher' && userData.status === 'pending') {
+                        auth.signOut();
+                        alert("உங்கள் கணக்கு இன்னும் சரிபார்க்கப்படுகிறது. 24 - 48 மணி நேரம் காத்திருக்கவும்.");
+                        return;
+                    }
+                }
+
+                // எல்லாம் சரியாக இருந்தால் உள்ளே அனுமதிக்கவும்
+                localStorage.setItem("isLoggedIn", "true");
+                window.location.href = "index.html";
+
+            } catch (error) {
+                console.error("Error routing user:", error);
+                showError("டேட்டாபேஸ் பிழை. மீண்டும் முயற்சிக்கவும்.");
+            }
+        }
+
+        // 3. Email Login
+        function handleEmailLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if(!email || !password) return showError("ஈமெயில் மற்றும் பாஸ்வேர்டை உள்ளிடவும்");
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => checkAndRouteUser(userCredential.user))
+                .catch((error) => showError("தவறான ஈமெயில் அல்லது பாஸ்வேர்ட்!"));
+        }
+
+        // 4. Email Sign Up (புதிய கணக்கு)
+        function handleEmailSignUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if(!email || !password) return showError("ஈமெயில் மற்றும் பாஸ்வேர்டை உள்ளிடவும்");
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => checkAndRouteUser(userCredential.user))
+                .catch((error) => showError(error.message));
+        }
+
+        // 5. Google Login
+        function handleGoogleLogin() {
+            auth.signInWithPopup(googleProvider)
+                .then((result) => checkAndRouteUser(result.user))
+                .catch((error) => showError("Google Login தோல்வியடைந்தது!"));
         }
     </script>
 </body>
