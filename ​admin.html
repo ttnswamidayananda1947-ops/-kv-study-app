@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>அட்மின் பேனல் - கல்வி வானம்</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f4f7f6; }
+        .navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        
+        /* Request Card */
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .approve-btn { background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .empty-msg { text-align: center; color: #7f8c8d; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h2>Admin Dashboard</h2>
+        <button onclick="handleLogout()" style="background: #e74c3c; color: white; border:none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">Logout</button>
+    </nav>
+
+    <div class="container">
+        <h3>🆕 புதிய ஆசிரியர் கோரிக்கைகள்</h3>
+        <div id="request-list">
+            <p class="empty-msg">கோரிக்கைகள் ஏதுமில்லை...</p>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
+            authDomain: "kv-study-app.firebaseapp.com",
+            projectId: "kv-study-app",
+            storageBucket: "kv-study-app.firebasestorage.app",
+            messagingSenderId: "865978831958",
+            appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7",
+            measurementId: "G-96ZQTNLN54"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 1. அட்மின் செக்யூரிட்டி
+        auth.onAuthStateChanged((user) => {
+            if (!user || user.email !== "ttnswamidayananda1947@gmail.com") {
+                window.location.href = "login.html";
+            } else {
+                fetchPendingRequests();
+            }
+        });
+
+        // 2. ரிக்வெஸ்ட் எடுக்கும் ஃபங்ஷன்
+        async function fetchPendingRequests() {
+            const list = document.getElementById('request-list');
+            const snapshot = await db.collection("users")
+                                     .where("status", "==", "pending")
+                                     .where("role", "==", "teacher")
+                                     .get();
+            
+            list.innerHTML = "";
+            if (snapshot.empty) {
+                list.innerHTML = '<p class="empty-msg">புதிய கோரிக்கைகள் ஏதுமில்லை!</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                list.innerHTML += `
+                    <div class="card">
+                        <div>
+                            <strong>${user.email}</strong><br>
+                            <small>ஆசிரியர் கணக்கு</small>
+                        </div>
+                        <button class="approve-btn" onclick="approveTeacher('${doc.id}')">Approve</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. Approve செய்யும் ஃபங்ஷன்
+        async function approveTeacher(userId) {
+            await db.collection("users").doc(userId).update({ status: "approved" });
+            alert("ஆசிரியர் கணக்கு அங்கீகரிக்கப்பட்டது!");
+            fetchPendingRequests(); // ரீஃப்ரெஷ் செய்ய
+        }
+
+        function handleLogout() {
+            auth.signOut();
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
