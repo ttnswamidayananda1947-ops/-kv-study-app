@@ -4,18 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>கல்வி வானம் - லாகின்</title>
-    
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #f4f7f6; color: #333; overflow-x: hidden; }
-        .screen { width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        
-        #login-section { background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); }
+        .screen { width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); }
         .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .toggle-container { display: flex; background: #f0f0f0; border-radius: 30px; margin: 20px 0; }
         .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 30px; color: #777; font-weight: bold; }
@@ -28,8 +23,7 @@
     </style>
 </head>
 <body>
-
-    <div id="login-section" class="screen">
+    <div class="screen">
         <div class="login-box">
             <h2>கல்வி வானம் 👋</h2>
             <p id="role-desc">மாணவர் கணக்கில் நுழையவும்</p>
@@ -40,10 +34,10 @@
             </div>
 
             <div class="input-group">
-                <input type="email" id="email" placeholder="மின்னஞ்சல் (Email)" required>
+                <input type="email" id="email" placeholder="மின்னஞ்சல் (Email)">
             </div>
             <div class="input-group">
-                <input type="password" id="password" placeholder="கடவுச்சொல் (Password)" required>
+                <input type="password" id="password" placeholder="கடவுச்சொல் (Password)">
             </div>
             
             <div class="btn-group">
@@ -51,7 +45,10 @@
                 <button class="register-btn" onclick="handleEmailSignUp()">புதிய கணக்கு</button>
             </div>
 
-            <button class="google-btn" onclick="handleGoogleLogin()">Google மூலம் தொடரவும்</button>
+            <button class="google-btn" onclick="handleGoogleLogin()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="width:20px;" alt="Google">
+                Google மூலம் தொடரவும்
+            </button>
         </div>
     </div>
 
@@ -62,10 +59,8 @@
             projectId: "kv-study-app",
             storageBucket: "kv-study-app.firebasestorage.app",
             messagingSenderId: "865978831958",
-            appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7",
-            measurementId: "G-96ZQTNLN54"
+            appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -81,56 +76,48 @@
             document.getElementById('role-desc').innerText = role === 'student' ? "மாணவர் கணக்கில் நுழையவும்" : "ஆசிரியர் கணக்கில் நுழையவும்";
         }
 
-        // முக்கிய லாஜிக்: லாகின் ஆனதும் எங்கு செல்ல வேண்டும் என முடிவு செய்தல்
         async function checkAndRouteUser(user) {
-            // 1. அட்மின் லாகின் என்றால் அட்மின் பேனலுக்கு அனுப்பு
             if (user.email === ADMIN_EMAIL) {
-                localStorage.setItem("isLoggedIn", "true");
                 window.location.href = "admin.html";
                 return;
             }
 
-            // 2. மற்றவர்களுக்கு டேட்டாபேஸில் செக் செய்கிறோம்
             const userDocRef = db.collection("users").doc(user.uid);
             const doc = await userDocRef.get();
 
             if (!doc.exists) {
-                // புதிய யூசர் - டேட்டாபேஸில் ஸ்டேட்டஸ் உருவாக்குகிறோம்
                 const status = (currentRole === 'student') ? "approved" : "pending";
-                await userDocRef.set({
-                    email: user.email,
-                    role: currentRole,
-                    status: status,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await userDocRef.set({ email: user.email, role: currentRole, status: status });
 
                 if (status === "pending") {
                     auth.signOut();
-                    alert("கோரிக்கை பெறப்பட்டது! அட்மின் ஒப்புதலுக்கு (24-48 மணி நேரம்) காத்திருக்கவும்.");
-                    return;
+                    alert("கோரிக்கை பெறப்பட்டது! அட்மின் ஒப்புதலுக்கு காத்திருக்கவும்.");
+                } else {
+                    window.location.href = "index.html"; // மாணவர்கள்
                 }
             } else {
-                // பழைய யூசர் - ஸ்டேட்டஸ் செக் செய்கிறோம்
                 const userData = doc.data();
-                if (userData.role === 'teacher' && userData.status === 'pending') {
-                    auth.signOut();
-                    alert("உங்கள் கணக்கு இன்னும் சரிபார்க்கப்படுகிறது. காத்திருக்கவும்.");
-                    return;
+                if (userData.role === 'teacher') {
+                    if (userData.status === 'pending') {
+                        auth.signOut();
+                        alert("உங்கள் கணக்கு இன்னும் சரிபார்க்கப்படுகிறது. காத்திருக்கவும்.");
+                    } else {
+                        window.location.href = "teacher.html"; // ஆசிரியர்கள்
+                    }
+                } else {
+                    window.location.href = "index.html"; // மாணவர்கள்
                 }
             }
-
-            // எல்லாம் சரி என்றால் இன்டெக்ஸ் பேஜ்
-            localStorage.setItem("isLoggedIn", "true");
-            window.location.href = "index.html";
         }
 
-        // லாகின் ஃபங்ஷன்ஸ்
         function handleEmailLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            if(!email || !password) return alert("Google மூலம் கணக்கு இருந்தால், கீழே உள்ள Google பட்டனை அழுத்தவும்.");
+            
             auth.signInWithEmailAndPassword(email, password)
                 .then(res => checkAndRouteUser(res.user))
-                .catch(err => alert(err.message));
+                .catch(err => alert("தவறான பாஸ்வேர்ட் அல்லது Google கணக்கைப் பயன்படுத்தவும்."));
         }
 
         function handleEmailSignUp() {
@@ -142,9 +129,7 @@
         }
 
         function handleGoogleLogin() {
-            auth.signInWithPopup(googleProvider)
-                .then(res => checkAndRouteUser(res.user))
-                .catch(err => alert(err.message));
+            auth.signInWithPopup(googleProvider).then(res => checkAndRouteUser(res.user));
         }
     </script>
 </body>
