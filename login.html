@@ -2,57 +2,64 @@
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>கல்வி வானம் - லாகின்</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>உள்நுழைய - கல்வி வானம்</title>
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #f4f7f6; color: #333; overflow-x: hidden; }
-        .screen { width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .toggle-container { display: flex; background: #f0f0f0; border-radius: 30px; margin: 20px 0; }
-        .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 30px; color: #777; font-weight: bold; }
-        .toggle-btn.active { background: #4a90e2; color: white; }
-        .input-group input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; }
-        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .submit-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: #4a90e2; color: white; font-weight: bold; cursor: pointer; }
-        .register-btn { flex: 1; padding: 12px; border: 1px solid #4a90e2; border-radius: 10px; background: white; color: #4a90e2; font-weight: bold; cursor: pointer; }
-        .google-btn { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        body { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        .login-card { background: white; width: 100%; max-width: 400px; padding: 30px 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .login-card h2 { color: #2c3e50; font-size: 1.8rem; margin-bottom: 5px; }
+        .login-card p { color: #7f8c8d; font-size: 1rem; margin-bottom: 25px; }
+
+        .toggle-box { display: flex; background: #f0f2f5; border-radius: 30px; margin-bottom: 25px; overflow: hidden; }
+        .toggle-btn { flex: 1; padding: 12px; font-weight: bold; font-size: 1rem; color: #7f8c8d; cursor: pointer; transition: 0.3s; }
+        .toggle-btn.active { background: #4a90e2; color: white; border-radius: 30px; }
+
+        .input-field { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; transition: 0.3s; background: #f9f9f9; }
+        .input-field:focus { border-color: #4a90e2; background: white; box-shadow: 0 0 5px rgba(74, 144, 226, 0.2); }
+
+        .error-msg { color: #e74c3c; font-size: 0.9rem; margin-bottom: 15px; display: none; font-weight: bold; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-login { flex: 1; background: #4a90e2; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-signup { flex: 1; background: white; color: #4a90e2; border: 2px solid #4a90e2; padding: 14px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        
+        .btn-login:hover { background: #357abd; }
+        .btn-signup:hover { background: #f0f8ff; }
+        .btn-login:disabled, .btn-signup:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <div class="screen">
-        <div class="login-box">
-            <h2>கல்வி வானம் 👋</h2>
-            <p id="role-desc">மாணவர் கணக்கில் நுழையவும்</p>
-            
-            <div class="toggle-container">
-                <button class="toggle-btn active" id="btn-student" onclick="setRole('student')">மாணவர்</button>
-                <button class="toggle-btn" id="btn-teacher" onclick="setRole('teacher')">ஆசிரியர்</button>
-            </div>
 
-            <div class="input-group">
-                <input type="email" id="email" placeholder="மின்னஞ்சல் (Email)">
-            </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="கடவுச்சொல் (Password)">
-            </div>
-            
-            <div class="btn-group">
-                <button class="submit-btn" onclick="handleEmailLogin()">உள்நுழைய</button>
-                <button class="register-btn" onclick="handleEmailSignUp()">புதிய கணக்கு</button>
-            </div>
+    <div class="login-card">
+        <h2>கல்வி வானம் 👋</h2>
+        <p>மாணவர் கணக்கில் நுழையவும்</p>
 
-            <button class="google-btn" onclick="handleGoogleLogin()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="width:20px;" alt="Google">
-                Google மூலம் தொடரவும்
-            </button>
+        <!-- Toggle Buttons (Visual) -->
+        <div class="toggle-box">
+            <div class="toggle-btn active">மாணவர்</div>
+            <div class="toggle-btn">ஆசிரியர்</div>
+        </div>
+
+        <div id="error-message" class="error-msg"></div>
+
+        <input type="email" id="email" class="input-field" placeholder="மின்னஞ்சல் (Email)" required>
+        <input type="password" id="password" class="input-field" placeholder="கடவுச்சொல் (Password)" required>
+
+        <div class="btn-group">
+            <button class="btn-login" id="loginBtn" onclick="loginWithEmail()">உள்நுழைய</button>
+            <button class="btn-signup" id="signupBtn" onclick="signUpWithEmail()">புதிய கணக்கு</button>
         </div>
     </div>
 
     <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
             authDomain: "kv-study-app.firebaseapp.com",
@@ -61,75 +68,89 @@
             messagingSenderId: "865978831958",
             appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const db = firebase.firestore();
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        const ADMIN_EMAIL = "ttnswamidayananda1947@gmail.com";
-        let currentRole = 'student';
+        // ஏற்கெனவே லாகின் செய்திருந்தால் நேராக முகப்புப் பக்கத்திற்குச் செல்ல
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                window.location.href = "index.html";
+            }
+        });
 
-        function setRole(role) {
-            currentRole = role;
-            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(role === 'student' ? 'btn-student' : 'btn-teacher').classList.add('active');
-            document.getElementById('role-desc').innerText = role === 'student' ? "மாணவர் கணக்கில் நுழையவும்" : "ஆசிரியர் கணக்கில் நுழையவும்";
+        function showError(message) {
+            const errorDiv = document.getElementById("error-message");
+            errorDiv.style.display = "block";
+            errorDiv.innerText = message;
         }
 
-        async function checkAndRouteUser(user) {
-            if (user.email === ADMIN_EMAIL) {
-                window.location.href = "admin.html";
+        // உள்நுழைய (Login)
+        function loginWithEmail() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            
+            if (!email || !password) {
+                showError("தயவுசெய்து மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.");
                 return;
             }
 
-            const userDocRef = db.collection("users").doc(user.uid);
-            const doc = await userDocRef.get();
+            document.getElementById("loginBtn").innerText = "காத்திருக்கவும்...";
+            document.getElementById("loginBtn").disabled = true;
 
-            if (!doc.exists) {
-                const status = (currentRole === 'student') ? "approved" : "pending";
-                await userDocRef.set({ email: user.email, role: currentRole, status: status });
-
-                if (status === "pending") {
-                    auth.signOut();
-                    alert("கோரிக்கை பெறப்பட்டது! அட்மின் ஒப்புதலுக்கு காத்திருக்கவும்.");
-                } else {
-                    window.location.href = "index.html"; // மாணவர்கள்
-                }
-            } else {
-                const userData = doc.data();
-                if (userData.role === 'teacher') {
-                    if (userData.status === 'pending') {
-                        auth.signOut();
-                        alert("உங்கள் கணக்கு இன்னும் சரிபார்க்கப்படுகிறது. காத்திருக்கவும்.");
-                    } else {
-                        window.location.href = "teacher.html"; // ஆசிரியர்கள்
-                    }
-                } else {
-                    window.location.href = "index.html"; // மாணவர்கள்
-                }
-            }
-        }
-
-        function handleEmailLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Google மூலம் கணக்கு இருந்தால், கீழே உள்ள Google பட்டனை அழுத்தவும்.");
-            
             auth.signInWithEmailAndPassword(email, password)
-                .then(res => checkAndRouteUser(res.user))
-                .catch(err => alert("தவறான பாஸ்வேர்ட் அல்லது Google கணக்கைப் பயன்படுத்தவும்."));
+                .then((userCredential) => {
+                    // வெற்றி
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    document.getElementById("loginBtn").innerText = "உள்நுழைய";
+                    document.getElementById("loginBtn").disabled = false;
+                    
+                    if (error.code === 'auth/user-not-found') {
+                        showError("இந்த மின்னஞ்சலில் கணக்கு இல்லை. 'புதிய கணக்கு' உருவாக்கவும்.");
+                    } else if (error.code === 'auth/wrong-password') {
+                        showError("கடவுச்சொல் தவறு! மீண்டும் முயற்சிக்கவும்.");
+                    } else if (error.code === 'auth/invalid-email') {
+                        showError("சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.");
+                    } else {
+                        showError("பிழை: " + error.message);
+                    }
+                });
         }
 
-        function handleEmailSignUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        // புதிய கணக்கு உருவாக்க (Sign Up)
+        function signUpWithEmail() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            
+            if (!email || !password) {
+                showError("தயவுசெய்து மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.");
+                return;
+            }
+            if (password.length < 6) {
+                showError("கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்.");
+                return;
+            }
+
+            document.getElementById("signupBtn").innerText = "உருவாக்குகிறது...";
+            document.getElementById("signupBtn").disabled = true;
+
             auth.createUserWithEmailAndPassword(email, password)
-                .then(res => checkAndRouteUser(res.user))
-                .catch(err => alert(err.message));
-        }
-
-        function handleGoogleLogin() {
-            auth.signInWithPopup(googleProvider).then(res => checkAndRouteUser(res.user));
+                .then((userCredential) => {
+                    // வெற்றி
+                    window.location.href = "index.html";
+                })
+                .catch((error) => {
+                    document.getElementById("signupBtn").innerText = "புதிய கணக்கு";
+                    document.getElementById("signupBtn").disabled = false;
+                    
+                    if (error.code === 'auth/email-already-in-use') {
+                        showError("இந்த மின்னஞ்சல் ஏற்கனவே பயன்பாட்டில் உள்ளது. 'உள்நுழைய' பட்டனை அழுத்தவும்.");
+                    } else {
+                        showError("பிழை: " + error.message);
+                    }
+                });
         }
     </script>
 </body>
