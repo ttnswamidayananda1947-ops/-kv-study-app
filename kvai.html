@@ -40,7 +40,7 @@
         .chat-box { flex: 1; background: white; border-radius: 12px; padding: 20px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px; }
         
         /* Message Styles */
-        .msg { max-width: 80%; padding: 12px 15px; border-radius: 15px; font-size: 1rem; line-height: 1.4; animation: fadeIn 0.3s ease; }
+        .msg { max-width: 85%; padding: 12px 15px; border-radius: 15px; font-size: 1rem; line-height: 1.5; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .bot-msg { background: #f0f8ff; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; border-left: 4px solid #4a90e2; }
@@ -51,6 +51,7 @@
         .input-area input { flex: 1; border: none; outline: none; padding: 10px 15px; font-size: 1rem; border-radius: 20px; background: #f9f9f9; }
         .input-area button { background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .input-area button:hover { background: #27ae60; }
+        .input-area button:disabled { background: #95a5a6; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -85,18 +86,18 @@
         <div class="chat-box" id="chat-box">
             <!-- Default Bot Welcome Message -->
             <div class="msg bot-msg">
-                வணக்கம்! 👋 நான் <strong>KV AI</strong>. கல்வி வானம் செயலியின் டிஜிட்டல் ஆசிரியர். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்? (உதாரணமாக: கணித சூத்திரங்கள், அறிவியல் சந்தேகங்கள் கேட்கலாம்).
+                வணக்கம்! 👋 நான் <strong>KV AI</strong>. கல்வி வானம் செயலியின் டிஜிட்டல் ஆசிரியர். உங்களுக்கு எதைப் பற்றித் தெரிந்துகொள்ள வேண்டும்? (உதா: "ஒளிச்சேர்க்கை என்றால் என்ன?", "பூமியின் விட்டம் என்ன?")
             </div>
         </div>
 
         <div class="input-area">
             <input type="text" id="user-input" placeholder="உங்கள் கேள்வியைத் தட்டச்சு செய்யவும்..." onkeypress="handleEnter(event)">
-            <button onclick="sendMessage()">அனுப்பு</button>
+            <button id="send-btn" onclick="sendMessage()">அனுப்பு</button>
         </div>
     </div>
 
     <script>
-        // 1. Firebase Configuration
+        // 1. Firebase Configuration (லொகின் செக்யூரிட்டிக்காக)
         const firebaseConfig = {
             apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
             authDomain: "kv-study-app.firebaseapp.com",
@@ -108,48 +109,94 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // 2. Auth Check
+        // Auth Check
         auth.onAuthStateChanged((user) => { 
             if (!user) window.location.href = "login.html"; 
         });
 
-        // 3. Sidebar Toggle
+        // 2. Sidebar Toggle
         function toggleMenu() {
             document.getElementById("sidebar").classList.toggle("active");
             document.getElementById("overlay").classList.toggle("active");
         }
 
-        // 4. Chat Logic (UI Only)
+        // 3. GEMINI API CONFIGURATION
+        const GEMINI_API_KEY = "AQ.Ab8RN6JbanjthYWhPmEPfvTg0s_6mjADYlkFn6l1Fm0zG1G2ug";
+        const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+
         function handleEnter(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
+            if (event.key === 'Enter') sendMessage();
         }
 
-        function sendMessage() {
+        // AI-க்கு மெசேஜ் அனுப்பும் ஃபங்ஷன்
+        async function sendMessage() {
             const inputField = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
             const message = inputField.value.trim();
             const chatBox = document.getElementById('chat-box');
 
             if (message === "") return;
 
-            // பயனர் அனுப்பிய மெசேஜை திரையில் காட்டுதல்
+            // 1. பயனர் மெசேஜை திரையில் காட்டு
             chatBox.innerHTML += `<div class="msg user-msg">${message}</div>`;
             inputField.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-            // AI பதிலை லோட் செய்வது போல ஒரு சிறிய அனிமேஷன்
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="msg bot-msg">மன்னிக்கவும், AI சிஸ்டம் இன்னும் முழுமையாக இணைக்கப்படவில்லை. விரைவில் அப்டேட் செய்யப்படும்! 🚀</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 1000);
+            // 2. லோடிங் அனிமேஷனைக் காட்டு
+            const loaderId = 'loader-' + Date.now();
+            chatBox.innerHTML += `<div class="msg bot-msg" id="${loaderId}">KV AI சிந்திக்கிறது... ⏳</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // பட்டனை முடக்கு (Double click ஆவதைத் தடுக்க)
+            sendBtn.disabled = true;
+            inputField.disabled = true;
+
+            try {
+                // 3. Gemini API-க்கு Request அனுப்புதல்
+                const response = await fetch(GEMINI_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        "system_instruction": {
+                            "parts": [
+                                { "text": "நீ கல்வி வானம் (Kalvi Vanam) செயலியின் செயற்கை நுண்ணறிவு ஆசிரியர். உன் பெயர் 'KV AI'. மாணவர்களின் கேள்விகளுக்குத் தமிழில் தெளிவாகவும், அன்பாகவும், எளிமையாகவும் பதிலளிக்க வேண்டும். பதில்கள் சுருக்கமாக இருக்க வேண்டும்." }
+                            ]
+                        },
+                        "contents": [
+                            { "parts": [{ "text": message }] }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                
+                // 4. API-ல் இருந்து வரும் பதிலை எடுத்தல்
+                let aiResponse = data.candidates[0].content.parts[0].text;
+
+                // 5. பதிலை அழகாக்குதல் (Markdown Formatting)
+                aiResponse = aiResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold ஆக்க
+                aiResponse = aiResponse.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic ஆக்க
+                aiResponse = aiResponse.replace(/\n/g, '<br>'); // அடுத்த வரிக்கு செல்ல
+
+                // 6. லோடிங்கை எடுத்துவிட்டு பதிலை மாற்றுதல்
+                document.getElementById(loaderId).innerHTML = aiResponse;
+
+            } catch (error) {
+                console.error("AI Error:", error);
+                document.getElementById(loaderId).innerHTML = "மன்னிக்கவும்! சர்வர் பிஸியாக உள்ளது. சிறிது நேரம் கழித்து மீண்டும் கேட்கவும்.";
+            }
+
+            // பழைய நிலைக்கு கொண்டு வருதல்
+            sendBtn.disabled = false;
+            inputField.disabled = false;
+            inputField.focus();
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 5. Logout Function
+        // Logout Function
         function handleLogout() { 
             auth.signOut().then(() => window.location.href = "login.html"); 
         }
     </script>
 </body>
-          </html>
-          
+</html>
