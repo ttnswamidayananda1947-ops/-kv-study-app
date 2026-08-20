@@ -15,7 +15,7 @@
         
         .login-card { background: white; width: 100%; max-width: 400px; padding: 30px 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         .login-card h2 { color: #2c3e50; font-size: 1.8rem; margin-bottom: 5px; }
-        .login-card p { color: #7f8c8d; font-size: 1rem; margin-bottom: 25px; }
+        .login-card p { color: #7f8c8d; font-size: 1rem; margin-bottom: 25px; transition: 0.3s; }
 
         .toggle-box { display: flex; background: #f0f2f5; border-radius: 30px; margin-bottom: 25px; overflow: hidden; }
         .toggle-btn { flex: 1; padding: 12px; font-weight: bold; font-size: 1rem; color: #7f8c8d; cursor: pointer; transition: 0.3s; }
@@ -39,12 +39,12 @@
 
     <div class="login-card">
         <h2>கல்வி வானம் 👋</h2>
-        <p>மாணவர் கணக்கில் நுழையவும்</p>
+        <p id="role-title">மாணவர் கணக்கில் நுழையவும்</p>
 
-        <!-- Toggle Buttons (Visual) -->
+        <!-- Toggle Buttons (Working) -->
         <div class="toggle-box">
-            <div class="toggle-btn active">மாணவர்</div>
-            <div class="toggle-btn">ஆசிரியர்</div>
+            <div class="toggle-btn active" id="btn-student" onclick="switchTab('student')">மாணவர்</div>
+            <div class="toggle-btn" id="btn-teacher" onclick="switchTab('teacher')">ஆசிரியர்</div>
         </div>
 
         <div id="error-message" class="error-msg"></div>
@@ -59,6 +59,26 @@
     </div>
 
     <script>
+        // Tab மாற்றுவதற்கான பங்க்ஷன் (Toggle Logic)
+        let currentRole = "student"; // Default
+        
+        function switchTab(role) {
+            currentRole = role;
+            const btnStudent = document.getElementById("btn-student");
+            const btnTeacher = document.getElementById("btn-teacher");
+            const roleTitle = document.getElementById("role-title");
+
+            if (role === "student") {
+                btnStudent.classList.add("active");
+                btnTeacher.classList.remove("active");
+                roleTitle.innerText = "மாணவர் கணக்கில் நுழையவும்";
+            } else {
+                btnTeacher.classList.add("active");
+                btnStudent.classList.remove("active");
+                roleTitle.innerText = "ஆசிரியர் கணக்கில் நுழையவும்";
+            }
+        }
+
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
@@ -100,7 +120,7 @@
 
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // வெற்றி
+                    // தற்போதைக்கு மாணவர்/ஆசிரியர் இருவருக்கும் ஒரே முகப்புப் பக்கம் (index.html)
                     window.location.href = "index.html";
                 })
                 .catch((error) => {
@@ -138,7 +158,6 @@
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // வெற்றி
                     window.location.href = "index.html";
                 })
                 .catch((error) => {
