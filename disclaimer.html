@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>மறுப்புறுதி - கல்வி வானம்</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f4f7f6; color: #333; display: flex; flex-direction: column; height: 100dvh; }
+        .navbar { background: #4a90e2; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .menu-btn { background: none; border: none; color: white; font-size: 26px; cursor: pointer; position: absolute; left: 20px; }
+        .navbar h2 { font-size: 1.4rem; letter-spacing: 1px; }
+        .sidebar { position: fixed; top: 0; left: -100%; width: 75%; max-width: 300px; height: 100%; background: #ffffff; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.2); transition: 0.4s ease; display: flex; flex-direction: column; padding-top: 60px; }
+        .sidebar.active { left: 0; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; background: none; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .sidebar a { text-decoration: none; color: #333; padding: 15px 25px; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+        .sidebar a:hover { background: #f0f8ff; color: #4a90e2; padding-left: 30px; }
+        .sidebar .logout-link { color: #e74c3c; margin-top: auto; margin-bottom: 20px; border-top: 1px solid #eee; border-bottom: none; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; opacity: 0; transition: 0.3s; }
+        .overlay.active { display: block; opacity: 1; }
+        
+        .container { padding: 30px 20px; max-width: 800px; margin: 0 auto; overflow-y: auto; }
+        .disclaimer-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 5px solid #e74c3c; }
+        .disclaimer-card h3 { color: #e74c3c; margin-bottom: 10px; }
+        .disclaimer-card p { line-height: 1.6; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleMenu()">✖</button>
+        <a href="index.html">🏠 முகப்பு</a>
+        <a href="kvai.html">🤖 KV AI (உதவியாளர்)</a>
+        <a href="about.html">ℹ️ எங்களைப் பற்றி</a>
+        <a href="contact.html">📞 தொடர்பு கொள்ள</a>
+        <a href="disclaimer.html" style="color: #4a90e2; background: #f0f8ff;">⚠️ மறுப்புறுதி</a>
+        <a href="#" class="logout-link" onclick="handleLogout()">🚪 வெளியேறு (Logout)</a>
+    </div>
+
+    <nav class="navbar">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <h2>மறுப்புறுதி</h2>
+    </nav>
+
+    <div class="container">
+        <div class="disclaimer-card">
+            <h3>பொதுவான மறுப்பு (General Disclaimer)</h3>
+            <p>இந்த "கல்வி வானம்" செயலியானது மாணவர்களின் கல்வி வளர்ச்சிக்காக மட்டுமே உருவாக்கப்பட்டுள்ளது. இதில் உள்ள பாடங்கள் மற்றும் வீடியோக்கள் ஆசிரியர்களின் வழிகாட்டுதலின்படி வழங்கப்படுகின்றன.</p>
+        </div>
+
+        <div class="disclaimer-card" style="border-left-color: #f39c12;">
+            <h3 style="color: #f39c12;">செயற்கை நுண்ணறிவு எச்சரிக்கை (AI Warning)</h3>
+            <p>எங்கள் <strong>KV AI</strong> உதவியாளர் மாணவர்களுக்கு வழிகாட்ட மட்டுமே வடிவமைக்கப்பட்டுள்ளது. AI தொழில்நுட்பம் சில நேரங்களில் தவறான அல்லது துல்லியமற்ற தகவல்களை வழங்க வாய்ப்புள்ளது (KV AI can make mistakes). எனவே, முக்கியமான பாடத் தகவல்களை உங்கள் ஆசிரியர்களிடமோ அல்லது அதிகாரப்பூர்வ புத்தகங்களிலோ சரிபார்த்துக்கொள்ளுமாறு கேட்டுக்கொள்கிறோம்.</p>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI", authDomain: "kv-study-app.firebaseapp.com", projectId: "kv-study-app", storageBucket: "kv-study-app.firebasestorage.app", messagingSenderId: "865978831958", appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        auth.onAuthStateChanged((user) => { if (!user) window.location.href = "login.html"; });
+        function toggleMenu() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("overlay").classList.toggle("active"); }
+        function handleLogout() { auth.signOut().then(() => window.location.href = "login.html"); }
+    </script>
+</body>
+</html>

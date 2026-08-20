@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>எங்களைப் பற்றி - கல்வி வானம்</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f4f7f6; color: #333; display: flex; flex-direction: column; height: 100dvh; }
+        .navbar { background: #4a90e2; color: white; padding: 15px 20px; display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .menu-btn { background: none; border: none; color: white; font-size: 26px; cursor: pointer; position: absolute; left: 20px; }
+        .navbar h2 { font-size: 1.4rem; letter-spacing: 1px; }
+        .sidebar { position: fixed; top: 0; left: -100%; width: 75%; max-width: 300px; height: 100%; background: #ffffff; z-index: 1000; box-shadow: 5px 0 15px rgba(0,0,0,0.2); transition: 0.4s ease; display: flex; flex-direction: column; padding-top: 60px; }
+        .sidebar.active { left: 0; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; background: none; border: none; color: #e74c3c; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .sidebar a { text-decoration: none; color: #333; padding: 15px 25px; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+        .sidebar a:hover { background: #f0f8ff; color: #4a90e2; padding-left: 30px; }
+        .sidebar .logout-link { color: #e74c3c; margin-top: auto; margin-bottom: 20px; border-top: 1px solid #eee; border-bottom: none; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; opacity: 0; transition: 0.3s; }
+        .overlay.active { display: block; opacity: 1; }
+        
+        /* Content Styling */
+        .container { padding: 30px 20px; max-width: 800px; margin: 0 auto; overflow-y: auto; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .school-name { color: #d35400; font-size: 1.3rem; font-weight: bold; margin: 15px 0; line-height: 1.5; }
+        .desc { font-size: 1.1rem; color: #555; line-height: 1.6; }
+        .highlight { color: #4a90e2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleMenu()">✖</button>
+        <a href="index.html">🏠 முகப்பு</a>
+        <a href="kvai.html">🤖 KV AI (உதவியாளர்)</a>
+        <a href="about.html" style="color: #4a90e2; background: #f0f8ff;">ℹ️ எங்களைப் பற்றி</a>
+        <a href="contact.html">📞 தொடர்பு கொள்ள</a>
+        <a href="disclaimer.html">⚠️ மறுப்புறுதி</a>
+        <a href="#" class="logout-link" onclick="handleLogout()">🚪 வெளியேறு (Logout)</a>
+    </div>
+
+    <nav class="navbar">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <h2>எங்களைப் பற்றி</h2>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>🌟 கல்வி வானம் 🌟</h2>
+            <p class="school-name">டி.டி. நரசிம்மன் சுவாமி தயானந்த சரஸ்வதி பள்ளி, மஞ்சக்குடி</p>
+            <p class="desc">
+                "கல்வி வானம்" செயலியானது, எங்கள் பள்ளி மாணவர்களால் பெருமையுடன் உருவாக்கப்பட்டுள்ளது. 
+                மாணவர்களின் கல்வித் திறனை மேம்படுத்தவும், நவீன <span class="highlight">செயற்கை நுண்ணறிவு (AI)</span> தொழில்நுட்பங்களை கிராமப்புற மாணவர்களுக்கும் எளிதாகக் கொண்டு சேர்க்கவும் இந்த முயற்சி எடுக்கப்பட்டுள்ளது.
+            </p>
+            <br>
+            <p class="desc">எங்கள் பள்ளியின் பெருமையை உலகறியச் செய்வதே எங்கள் இலக்கு! அறிவே ஆயுதம்! 📖✨</p>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI", authDomain: "kv-study-app.firebaseapp.com", projectId: "kv-study-app", storageBucket: "kv-study-app.firebasestorage.app", messagingSenderId: "865978831958", appId: "1:865978831958:web:7d2a2f8f1200daa64c57f7" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        auth.onAuthStateChanged((user) => { if (!user) window.location.href = "login.html"; });
+        function toggleMenu() { document.getElementById("sidebar").classList.toggle("active"); document.getElementById("overlay").classList.toggle("active"); }
+        function handleLogout() { auth.signOut().then(() => window.location.href = "login.html"); }
+    </script>
+</body>
+</html>
