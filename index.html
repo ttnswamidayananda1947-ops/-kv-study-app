@@ -34,7 +34,7 @@
         .overlay.active { display: block; opacity: 1; }
 
         /* Main Container */
-        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; padding-bottom: 100px; /* FAB மறைக்காமல் இருக்க */ }
         .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
         .subject-card { background: white; padding: 30px 20px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 1.2rem; color: #333; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; border-bottom: 4px solid #4a90e2; }
         .subject-card:hover { transform: translateY(-5px); background: #e0f7fa; }
@@ -53,6 +53,15 @@
         .answer { color: #333; line-height: 1.5; }
         .empty-msg { text-align: center; color: #7f8c8d; font-size: 1.1rem; margin-top: 30px; }
         .loader { text-align: center; font-weight: bold; color: #4a90e2; margin-top: 20px; }
+
+        /* KV AI Floating Action Button (FAB) */
+        .fab-ai { position: fixed; bottom: 30px; right: 20px; background: linear-gradient(135deg, #4a90e2, #74ebd5); color: white; text-decoration: none; padding: 12px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; z-index: 990; animation: pulse 2s infinite; transition: 0.3s; }
+        .fab-ai:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(74, 144, 226, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0); }
+        }
     </style>
 </head>
 <body>
@@ -63,7 +72,8 @@
     <!-- Sidebar Menu -->
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="toggleMenu()">✖</button>
-        <a href="index.html">🏠 முகப்பு</a>
+        <a href="index.html" style="color: #4a90e2; background: #f0f8ff;">🏠 முகப்பு</a>
+        <a href="kvai.html">🤖 KV AI (உதவியாளர்)</a>
         <a href="about.html">ℹ️ எங்களைப் பற்றி</a>
         <a href="contact.html">📞 தொடர்பு கொள்ள</a>
         <a href="disclaimer.html">⚠️ மறுப்புறுதி</a>
@@ -95,6 +105,9 @@
         </div>
 
     </div>
+
+    <!-- Floating KV AI Button -->
+    <a href="kvai.html" class="fab-ai">🤖 KV AI கேளுங்கள்</a>
 
     <script>
         const firebaseConfig = {
