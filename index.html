@@ -149,7 +149,12 @@
             listDiv.innerHTML = '<p class="loader">தரவுகள் ஏற்றப்படுகின்றன...</p>';
 
             try {
-                const snapshot = await db.collection("lessons").where("subject", "==", subject).orderBy("createdAt", "desc").get();
+                // Firebase Database query
+                const snapshot = await db.collection("lessons")
+                                         .where("subject", "==", subject)
+                                         .orderBy("createdAt", "desc")
+                                         .get();
+                                         
                 if (snapshot.empty) { 
                     listDiv.innerHTML = '<p class="empty-msg">இன்னும் வீடியோக்கள் பதிவேற்றப்படவில்லை!</p>'; 
                     return; 
@@ -180,9 +185,13 @@
                 listDiv.innerHTML = html;
             } catch (error) {
                 console.error("Firebase Error:", error);
-                listDiv.innerHTML = error.message.includes("indexes") 
-                    ? '<p class="empty-msg" style="color:red;">டேட்டாபேஸ் Index செட் செய்யப்படவில்லை.</p>' 
-                    : '<p class="empty-msg" style="color:red;">பிழை ஏற்பட்டது.</p>';
+                
+                // Index Error Handling (Developer Alert)
+                if (error.message.includes("indexes")) {
+                    listDiv.innerHTML = '<p class="empty-msg" style="color:red;">Firebase-ல் Composite Index செட் செய்யப்படவில்லை. (Index URL ஐ கன்சோலில் பார்க்கவும்)</p>';
+                } else {
+                    listDiv.innerHTML = '<p class="empty-msg" style="color:red;">பிழை ஏற்பட்டது.</p>';
+                }
             }
         }
 
