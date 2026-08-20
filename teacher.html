@@ -12,13 +12,9 @@
         body { background: #f4f7f6; }
         .navbar { background: #4a90e2; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 20px; max-width: 800px; margin: 0 auto; }
-        
-        /* Subject Cards */
         .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
         .subject-card { background: white; padding: 20px; text-align: center; border-radius: 12px; font-weight: bold; font-size: 1.2rem; color: #333; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
         .subject-card:hover { transform: translateY(-5px); background: #e0f7fa; }
-
-        /* Upload Form */
         #upload-section { display: none; background: white; padding: 25px; border-radius: 15px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
@@ -35,7 +31,6 @@
     </nav>
 
     <div class="container">
-        <!-- பாடம் தேர்ந்தெடுக்கும் பகுதி -->
         <div id="subject-selection">
             <h3>எந்தப் பாடத்தில் வீடியோ சேர்க்க விரும்புகிறீர்கள்?</h3>
             <div class="subject-grid">
@@ -45,7 +40,6 @@
             </div>
         </div>
 
-        <!-- வீடியோ மற்றும் கேள்வி பதில் பதிவேற்றும் ஃபார்ம் -->
         <div id="upload-section">
             <button class="back-btn" onclick="closeForm()">🔙 பின்செல்ல</button>
             <h3 id="form-title" style="margin-bottom: 15px; color: #4a90e2;"></h3>
@@ -103,13 +97,11 @@
         let currentSubject = "";
         let teacherEmail = "";
 
-        // லாகின் செக்யூரிட்டி
         auth.onAuthStateChanged((user) => {
             if (!user) window.location.href = "login.html";
             else teacherEmail = user.email;
         });
 
-        // ஃபார்மை ஓபன் செய்தல்
         function openForm(subject) {
             currentSubject = subject;
             document.getElementById('subject-selection').style.display = 'none';
@@ -117,14 +109,12 @@
             document.getElementById('form-title').innerText = subject + " - புதிய பாடம்";
         }
 
-        // ஃபார்மை மூடுதல்
         function closeForm() {
             document.getElementById('subject-selection').style.display = 'block';
             document.getElementById('upload-section').style.display = 'none';
             clearForm();
         }
 
-        // டேட்டாவை Firebase-ல் சேமித்தல்
         async function submitLesson() {
             const title = document.getElementById('lessonTitle').value;
             const videoUrl = document.getElementById('videoUrl').value;
@@ -132,7 +122,6 @@
             if(!title || !videoUrl) return alert("தயவுசெய்து தலைப்பு மற்றும் வீடியோ லிங்க்கை உள்ளிடவும்!");
 
             const lessonData = {
-                subject: currentSubject,
                 title: title,
                 videoUrl: videoUrl,
                 qa: [
@@ -145,8 +134,8 @@
             };
 
             try {
-                // டேட்டாபேஸில் "lessons" என்ற இடத்தில் சேமிக்கப்படுகிறது
-                await db.collection("lessons").add(lessonData);
+                // நீங்கள் சொன்ன படி புதிய ஸ்ட்ரக்ச்சர்: subjects -> Maths -> lessons -> [data]
+                await db.collection("subjects").doc(currentSubject).collection("lessons").add(lessonData);
                 alert("பாடம் வெற்றிகரமாக பதிவேற்றப்பட்டது! 🎉");
                 closeForm();
             } catch (error) {
