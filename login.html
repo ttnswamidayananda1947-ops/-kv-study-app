@@ -41,7 +41,6 @@
         <h2>கல்வி வானம் 👋</h2>
         <p id="role-title">மாணவர் கணக்கில் நுழையவும்</p>
 
-        <!-- Toggle Buttons (Working) -->
         <div class="toggle-box">
             <div class="toggle-btn active" id="btn-student" onclick="switchTab('student')">மாணவர்</div>
             <div class="toggle-btn" id="btn-teacher" onclick="switchTab('teacher')">ஆசிரியர்</div>
@@ -59,8 +58,7 @@
     </div>
 
     <script>
-        // Tab மாற்றுவதற்கான பங்க்ஷன் (Toggle Logic)
-        let currentRole = "student"; // Default
+        let currentRole = "student"; 
         
         function switchTab(role) {
             currentRole = role;
@@ -79,7 +77,6 @@
             }
         }
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBAvBOy2nPztuB3lca6uzfx6cXLUKcvVsI",
             authDomain: "kv-study-app.firebaseapp.com",
@@ -92,10 +89,16 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // ஏற்கெனவே லாகின் செய்திருந்தால் நேராக முகப்புப் பக்கத்திற்குச் செல்ல
+        // Auto-login Routing Logic (ஏற்கெனவே லாகின் செய்திருந்தால்)
         auth.onAuthStateChanged((user) => {
             if (user) {
-                window.location.href = "index.html";
+                if (user.email === "ttnswamidayananda1947@gmail.com") {
+                    window.location.href = "admin.html"; // அட்மின் மெயில்
+                } else {
+                    // குறிப்பு: டேட்டாபேஸ் செட் செய்த பிறகு டீச்சருக்கு தனியாகப் பிரிக்கலாம். 
+                    // இப்போதைக்கு ஆட்டோ லாகினில் முகப்புப் பக்கத்திற்குச் செல்லும்.
+                    window.location.href = "index.html"; 
+                }
             }
         });
 
@@ -105,7 +108,7 @@
             errorDiv.innerText = message;
         }
 
-        // உள்நுழைய (Login)
+        // Login Routing Logic (புதிதாக உள்நுழையும்போது)
         function loginWithEmail() {
             const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value.trim();
@@ -120,8 +123,14 @@
 
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // தற்போதைக்கு மாணவர்/ஆசிரியர் இருவருக்கும் ஒரே முகப்புப் பக்கம் (index.html)
-                    window.location.href = "index.html";
+                    // இங்கேதான் Admin / Teacher / Student பிரிப்பு நடக்கிறது
+                    if (email === "ttnswamidayananda1947@gmail.com") {
+                        window.location.href = "admin.html";
+                    } else if (currentRole === "teacher") {
+                        window.location.href = "teacher.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
                 })
                 .catch((error) => {
                     document.getElementById("loginBtn").innerText = "உள்நுழைய";
@@ -139,7 +148,7 @@
                 });
         }
 
-        // புதிய கணக்கு உருவாக்க (Sign Up)
+        // Sign Up Routing Logic
         function signUpWithEmail() {
             const email = document.getElementById("email").value.trim();
             const password = document.getElementById("password").value.trim();
@@ -158,7 +167,13 @@
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    window.location.href = "index.html";
+                    if (email === "ttnswamidayananda1947@gmail.com") {
+                        window.location.href = "admin.html";
+                    } else if (currentRole === "teacher") {
+                        window.location.href = "teacher.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
                 })
                 .catch((error) => {
                     document.getElementById("signupBtn").innerText = "புதிய கணக்கு";
